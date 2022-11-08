@@ -156,7 +156,7 @@ def main():
         prev_filename = None
         for nth, volume_name, filename, pagename, volurl, comment in volsit:
             try:
-                next_filename = volsit.peek()[0]
+                next_filename = volsit.peek()[2]
             except StopIteration:
                 next_filename = None
             additional_fields = "\n".join(
@@ -179,7 +179,7 @@ def main():
                     f"Creating (batch task; 3gm; {batch_link})",
                 )
             volume_wikitext = f"""=={{{{int:filedesc}}}}==
-{{{{{booknavi}|prev={prev_filename}|next={next_filename}|nth={nth}|total={len(volurls)}}}}}
+{{{{{booknavi}|prev={prev_filename or ""}|next={next_filename or ""}|nth={nth}|total={len(volurls)}|type={book["type"]}|sid={book["sid"]}|recno={book["recno"]}|relicno={book["relicno"]}}}}}
 {{{{{template}
   |byline={byline}
   |volume={volume_name}
