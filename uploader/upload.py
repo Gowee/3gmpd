@@ -72,7 +72,7 @@ def retry(times=RETRY_TIMES):
 
 
 def getbook(url):
-    resp = requests.get(url, headers={'User-Agent': USER_AGENT})
+    resp = requests.get(url, headers={"User-Agent": USER_AGENT})
     assert len(resp.content) != 0, "Got empty file"
     if "Content-Length" in resp.headers:
         # https://blog.petrzemek.net/2018/04/22/on-incomplete-http-reads-and-the-requests-library-in-python/
@@ -87,7 +87,7 @@ def getbook(url):
 def main():
     with open(CONFIG_FILE_PATH, "r") as f:
         config = yaml.safe_load(f.read())
-    
+
     if len(sys.argv) < 2:
         exit(
             f"Not batch specified.\n\nAvailable: {', '.join(list(config['batches'].keys()))}"
@@ -118,14 +118,16 @@ def main():
         books = iter(books)
         logger.info(f"Last processed: {last_position}")
         next(
-            itertools.dropwhile(lambda book: str(book["relicno"]) != last_position, books)
+            itertools.dropwhile(
+                lambda book: str(book["relicno"]) != last_position, books
+            )
         )  # lazy!
         # TODO: peek and report?
 
     failcnt = 0
 
     for book in books:
-        title = book['oldname']
+        title = book["oldname"]
         category_name = "Category:" + title
         byline = book["author"]
         if getopt("apply_tortoise_shell_brackets_to_starting_of_byline", False):
@@ -135,7 +137,8 @@ def main():
                 r"\1〔\2〕",
                 byline,
             )
-        volurls = book['p_resourceurl'].split(",")
+        volurls = book["p_resourceurl"].split(",")
+
         def genvols():
             for ivol, volurl in enumerate(volurls):
                 # pagename = "File:" + book['name'] + ".pdf"
@@ -148,6 +151,7 @@ def main():
                 assert all(char not in set(r'["$*|\]</^>@#') for char in pagename)
                 comment = f'Upload {book["name"]}{volume_name_wps} ({1+ivol}/{len(volurls)}) by {book["author"]} (batch task; 3gm; {batch_link}; [[{category_name}|{title}]])'
                 yield ivol + 1, volume_name, filename, pagename, volurl, comment
+
         volsit = peekable(genvols())
         prev_filename = None
         for nth, volume_name, filename, pagename, volurl, comment in volsit:
@@ -155,7 +159,9 @@ def main():
                 next_filename = volsit.peek()[0]
             except StopIteration:
                 next_filename = None
-            additional_fields = "\n".join(f"  |JSONFIELD-{k}={v}" for k, v in book.items())
+            additional_fields = "\n".join(
+                f"  |JSONFIELD-{k}={v}" for k, v in book.items()
+            )
             category_page = site.pages[category_name]
             # TODO: for now we do not create a seperated category suffixed with the edition
             if not category_page.exists:
@@ -185,7 +191,7 @@ def main():
             page = site.pages[pagename]
             try:
                 if not page.exists:
-                    logger.info(f'Downloading {volurl}')
+                    logger.info(f"Downloading {volurl}")
                     binary = getbook(volurl)
                     logger.info(f"Uploading {pagename} ({len(binary)} B)")
 
